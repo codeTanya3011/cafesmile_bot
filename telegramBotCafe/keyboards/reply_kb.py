@@ -1,0 +1,49 @@
+from aiogram.utils.keyboard import ReplyKeyboardBuilder, ReplyKeyboardMarkup
+
+
+def share_phone_button() -> ReplyKeyboardMarkup:
+    builder = ReplyKeyboardBuilder()
+    builder.button(text="☎️Надіслати свій контакт📞", request_contact=True)
+
+    return builder.as_markup(resize_keyboard=True)
+
+
+def generate_main_menu() -> ReplyKeyboardMarkup:
+    builder = ReplyKeyboardBuilder()
+    builder.button(text="✅ Зробити замовлення")
+    builder.button(text="🧺 Кошик")
+    builder.button(text="📌 Важлива інформація")
+    builder.adjust(2, 1)
+
+    return builder.as_markup(resize_keyboard=True)
+
+
+def delivery_and_pickup() -> ReplyKeyboardMarkup:
+    builder = ReplyKeyboardBuilder()
+    builder.button(text="🚛 Доставка")
+    builder.button(text="🚴🏼‍♂️ Самовивіз")
+    builder.adjust(2)
+
+    return builder.as_markup(resize_keyboard=True)
+
+
+def back_to_main_menu() -> ReplyKeyboardMarkup:
+    builder = ReplyKeyboardBuilder()
+    builder.button(text="✨ Головне меню")
+
+    return builder.as_markup(resize_keyboard=True)
+
+
+def back_arrow_button() -> ReplyKeyboardMarkup:
+    builder = ReplyKeyboardBuilder()
+    builder.button(text="🧺 Кошик")
+
+    return builder.as_markup(resize_keyboard=True)
+
+
+def back_and_main_menu_buttons() -> ReplyKeyboardMarkup:
+    builder = ReplyKeyboardBuilder()
+    builder.button(text="🧺 Кошик")
+    builder.button(text="✨ Головне меню") 
+    builder.adjust(2) 
+    return builder.as_markup(resize_keyboard=True)
