@@ -1,6 +1,9 @@
-from sqlalchemy import String, BigInteger, DECIMAL, ForeignKey, UniqueConstraint
+from sqlalchemy import String, BigInteger, DECIMAL, ForeignKey, UniqueConstraint, Text, Float, DateTime, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from database.base import Base
+from sqlalchemy.sql import func
+from datetime import datetime
+
+from telegramBotCafe.database.base import Base
 
 
 class Users(Base):
@@ -15,6 +18,7 @@ class Users(Base):
         back_populates='user_cart', 
         cascade="all, delete-orphan"
     )
+    orders: Mapped[list["Orders"]] = relationship(back_populates="user")
 
     def __str__(self):
         return self.name
@@ -79,3 +83,16 @@ class FinallyCarts(Base):
     user_cart: Mapped["Carts"] = relationship(back_populates='finally_id')
 
     __table_args__ = (UniqueConstraint('cart_id', 'product_name'),)
+
+
+class Orders(Base):
+    __tablename__ = 'orders'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('users.telegram'))
+    order_content: Mapped[str] = mapped_column(Text)
+    total_amount: Mapped[float] = mapped_column(Float)
+    delivery_type: Mapped[str] = mapped_column(String(50))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+
+    user: Mapped["Users"] = relationship(back_populates="orders")

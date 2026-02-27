@@ -2,10 +2,10 @@ from typing import Iterable
 from functools import wraps
 from sqlalchemy import update, delete, select, func
 from sqlalchemy.exc import IntegrityError
-from database.engine import connection
+from sqlalchemy.orm import selectinload
 
-from database.engine import AsyncSessionLocal
-from database.models import Users, Categories, Carts, FinallyCarts, Products
+from telegramBotCafe.database.engine import AsyncSessionLocal, connection
+from telegramBotCafe.database.models import Users, Categories, Carts, FinallyCarts, Products, Orders
 
 
 @connection
@@ -110,8 +110,36 @@ async def db_update_quantity(session, finally_id: int, delta: int):
             await session.commit()
 
 @connection
-async def clear_finally_cart(session, user_telegram_id: int):
-    cart = await session.scalar(select(Carts).join(Users).where(Users.telegram == user_telegram_id))
-    if cart:
-        await session.execute(delete(FinallyCarts).where(FinallyCarts.cart_id == cart.id))
-        await session.commit()
+async def db_clear_cart(session, cart_id: int):
+    await session.execute(delete(FinallyCarts).where(FinallyCarts.cart_id == cart_id))
+    await session.commit()
+
+@connection
+async def db_get_cart_item_by_id(session, finally_id: int) -> FinallyCarts | None:
+    return await session.get(FinallyCarts, finally_id)
+
+
+@connection
+async def db_save_order(session, user_id: int, content: str, total: float, delivery: str):
+    new_order = Orders(
+        user_id=user_id,
+        order_content=content,
+        total_amount=total,
+        delivery_type=delivery
+    )
+    session.add(new_order)
+    await session.commit()
+
+@connection
+async def db_get_user_history(session, user_tg: int, limit: int = 5):
+    result = await session.execute(
+        select(Users)
+        .where(Users.telegram == user_tg)
+        .options(selectinload(Users.orders))
+    )
+    user = result.scalar_one_or_none()
+    
+    if user:
+        orders = sorted(user.orders, key=lambda x: x.created_at, reverse=True)
+        return orders[:limit]
+    return []

@@ -1,4 +1,4 @@
-from database.db_utils import db_get_finally_cart_products
+from telegramBotCafe.database.db_utils import db_get_finally_cart_products
 
 
 def text_for_caption(name, description, price, dish_weight, quantity=1):
@@ -11,24 +11,28 @@ def text_for_caption(name, description, price, dish_weight, quantity=1):
         f"───────────────────\n"
         f"<b>СУМА: {total} UAH</b>"
     )
-    
 
-def counting_products_from_cart(chat_id, user_text):
-    products = db_get_finally_cart_products(chat_id)
+
+async def counting_products_from_cart(chat_id, user_text, products):
     if products:
-        text = f'{user_text}\n\n'
-        total_products = total_price = count = 0
-        for name, quantity, price, cart_id in products:
+        text = f'<b>{user_text}</b>\n\n'
+        total_products = 0
+        total_price = 0
+        count = 0
+        
+        for p in products:
             count += 1
-            total_products += quantity
-            total_price += price
-            text += f'{count}. {name}\nКількість: {quantity}\nВартість: {price}\n\n'
+            total_products += p.quantity
+            total_price += float(p.final_price) 
+            
+            text += (f'{count}. <b>{p.product_name}</b>\n'
+                     f'Кількість: {p.quantity} шт.\n'
+                     f'Вартість: {p.final_price} UAH\n\n')
 
-        text += f'Загальна кількість продуктів: {total_products}\nЗагальна вартість кошика: {total_price}'
+        text += "───────────────────\n"
+        text += f'Загальна кількість товарів: {total_products}\n'
+        text += f'<b>Загальна вартість кошика: {total_price} UAH</b>'
 
-        context = (count, text, total_price, chat_id)
-        return context
-
-
-
-
+        return count, text, total_price, chat_id
+    
+    return 0, "Кошик порожній", 0, chat_id

@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  db_cafe:
+    image: postgres:16
+    container_name: cafe_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5444:5432" 
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  bot:
+    build: .
+    container_name: cafe_bot
+    restart: always
+    depends_on:
+      - db_cafe
+    env_file:
+      - .env
+    environment:
+      - DB_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+    volumes:
+      - ./media:/app/media/media
+      - ./telegramBotCafe:/app/telegramBotCafe
+
+volumes:
+  postgres_data:
