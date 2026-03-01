@@ -23,12 +23,14 @@ async def show_finally_cart(event: Union[CallbackQuery, Message]):
     cart_products = await db_get_finally_cart_products(chat_id)
 
     if not cart_products:
-        text_empty = "😱 Ваш кошик порожній"
+        text_empty = "😱 <b>Ваш кошик порожній</b>\nПоверніться до меню, щоб обрати щось смачненьке!"
+        
         if isinstance(event, CallbackQuery):
             await event.message.delete()
-            await event.message.answer(text_empty)
+            await event.message.answer(text_empty, reply_markup=back_to_main_menu())
+            await event.answer() 
         else:
-            await event.answer(text_empty)
+            await event.answer(text_empty, reply_markup=back_to_main_menu())
         return
 
     total_price = 0

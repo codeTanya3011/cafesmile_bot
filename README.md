@@ -1,51 +1,53 @@
 # ☕ CafeSmile Telegram Bot
 
-Інтерактивний Telegram-бот для автоматизації замовлень у кафе з інтеграцією платіжної системи та автоматичним сповіщенням менеджера.
+An interactive Telegram bot for café order automation, featuring integrated payment systems and real-time merchant notifications.
 
-## 🔗 Спробувати бота в Telegram
-**[Посилання на твого бота, наприклад: t.me/CafeSmileBot]**
-*(посилання після деплою додати!)*
-
----
-
-## 🛠 Про проєкт
-Цей бот є повноцінним MVP (Minimum Viable Product) для системи автоматизації замовлень. Він супроводжує клієнта від перегляду меню до моменту оплати та передачі деталей замовлення на кухню.
-
-### Основні можливості для користувача:
-* **Інтерактивне меню**: Зручна навігація за категоріями страв із фотографіями та описами.
-* **Розумний кошик**: Динамічна зміна кількості товарів (кнопки `+` / `-`) з миттєвим оновленням суми без перезавантаження інтерфейсу.
-* **Автоматичний розрахунок**: Бот самостійно обчислює вартість товарів та додає ціну доставки залежно від обраного типу (кур'єр/самовивіз).
-* **Онлайн-оплата**: Інтеграція з Telegram Payments (підтримка Apple Pay / Google Pay / карт будь-яких банків).
-
-### Функції для бізнесу (адміністрування):
-* **Звіти для менеджера**: Миттєве надсилання деталізованого звіту про нове замовлення (склад кошика, сума, контактні дані клієнта).
-* **База даних**: Зберігання історії користувачів, активних кошиків та замовлень у PostgreSQL та показ їх юзеру. На проді можна буде додати логіку ведення загальної статистики.
+## 🔗 Try it on Telegram
+**[Link to your bot, e.g., t.me/CafeSmileBot]**
+*(Note: Add the actual link here after deployment!)*
 
 ---
 
-## ⚙️ Стек технологій
-Проєкт реалізований на сучасному стеку Python-розробки:
-* **Framework**: [Aiogram 3.x](https://docs.aiogram.dev/) — найпотужніша асинхронна бібліотека для Telegram Bot API.
-* **Database**: PostgreSQL — надійна реляційна база даних.
-* **ORM**: SQLAlchemy 2.0 — робота з БД в асинхронному режимі.
-* **Containerization**: Docker & Docker Compose — для стабільного розгортання та ізоляції сервісів.
+## 🛠 About The Project
+This bot is a comprehensive **MVP (Minimum Viable Product)** for an order automation system. It guides the client from browsing the menu to the final payment and transfers order details directly to the kitchen.
+
+### Key Features for Users:
+* **Interactive Menu**: User-friendly navigation through dish categories with photos and descriptions.
+* **Smart Shopping Cart**: Dynamic quantity adjustment (via `+` / `-` buttons) with instant total price updates—no interface reloads required.
+* **Automated Calculations**: The bot automatically calculates the subtotal and adds the delivery fee based on the selected type (Courier or Pickup).
+* **Online Payments**: Full integration with **Telegram Payments** (supporting Apple Pay, Google Pay, and standard bank cards).
+
+### Business Features (Administration):
+* **Merchant Reports**: Instant delivery of detailed order reports (cart content, total amount, and customer contact info).
+* **Database Management**: Persistence of user history, active carts, and orders using **PostgreSQL**, with the ability for users to view their history. 
+* **Scalability**: Designed with a structure that allows adding general business statistics and analytics in future production releases.
 
 ---
 
-## 💳 Тестування оплати (інструкція)
-Оскільки бот працює в тестовому режимі, ви можете імітувати онлайн-оплату, використовуючи наступні дані:
-* **Номер картки**: `4444 3333 2222 1111`
-* **CVC**: `123` (або будь-які 3 цифри)
-* **Термін дії**: будь-яка дата в майбутньому (наприклад, `12/29`)
+## ⚙️ Tech Stack
+The project is built on a modern Python development stack:
+* **Framework**: [Aiogram 3.x](https://docs.aiogram.dev/) — A powerful asynchronous library for the Telegram Bot API.
+* **Database**: **PostgreSQL** — A reliable relational database.
+* **ORM**: **SQLAlchemy 2.0** — Database interaction in full asynchronous mode.
+* **Containerization**: **Docker & Docker Compose** — For stable deployment and service isolation.
 
 ---
 
-## 📂 Структура проєкту
-* `handlers/` — логіка обробки команд, процес оформлення замовлення та оплати.
-* `database/` — асинхронні моделі SQLAlchemy та методи взаємодії з БД.
-* `keyboards/` — генератори динамічних інлайн-кнопок.
-* `utils/` — допоміжні модулі та інструменти:
-    * **States**: Опис станів FSM (Finite State Machine) для логіки оформлення замовлення (вибір доставки, геолокація, спосіб оплати).
-    * **Captions**: Зберігання текстових шаблонів та повідомлень для бота (чистий код без "зашитих" текстів).
-    * **Calculations**: Допоміжні функції для розрахунку вартості замовлення та перевірки логістики.
-* `docker-compose.yml` — конфігурація контейнерів бота та бази даних для швидкого деплою.
+## 💳 Testing the Payment System (Instructions)
+Since the bot operates in test mode, you can simulate an online payment using the following data:
+* **Card Number**: `4444 3333 2222 1111`
+* **CVC**: `123` (or any 3 digits)
+* **Expiry Date**: Any future date (e.g., `12/29`)
+
+---
+
+## 📂 Project Structure
+* `handlers/` — Core logic for command processing, checkout flow, and payment handling.
+* `database/` — Asynchronous SQLAlchemy models and database interaction methods.
+* `keyboards/` — Generators for dynamic inline and reply keyboards.
+* `utils/` — Utility modules and tools:
+    * **States**: FSM (Finite State Machine) definitions for checkout logic (delivery selection, geolocation, payment methods).
+    * **Captions**: Centralized storage for text templates and bot responses (maintaining Clean Code by avoiding hardcoded strings).
+    * **Calculations**: Helper functions for order subtotals and logistics verification.
+* `docker-compose.yml` — Container orchestration for the bot and database for rapid deployment.
+
