@@ -3,8 +3,7 @@
 An interactive Telegram bot for café order automation, featuring integrated payment systems and real-time merchant notifications.
 
 ## 🔗 Try it on Telegram
-**[Link to your bot, e.g., t.me/CafeSmileBot]**
-*(Note: Add the actual link here after deployment!)*
+**[@cafesmile68_bot](https://t.me/cafesmile68_bot)**
 
 ---
 

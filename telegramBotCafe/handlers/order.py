@@ -1,8 +1,7 @@
 import asyncio
 from aiogram import F, Bot, types, Router
 from aiogram.types import (CallbackQuery, Message, KeyboardButton, 
-                           ReplyKeyboardMarkup, LabeledPrice, 
-                           PreCheckoutQuery, ReplyKeyboardRemove)
+                           ReplyKeyboardMarkup, LabeledPrice, PreCheckoutQuery)
 from aiogram.fsm.context import FSMContext
 
 from telegramBotCafe.utils.states import OrderProcess
@@ -65,10 +64,30 @@ async def send_order_report_to_manager(
         f"━━━━━━━━━━━━━━━━━━\n"
         f"🚚 <b>Доставка:</b> {delivery_info}\n"
         f"💰 <b>Товари:</b> {products_sum} UAH\n"
-        f"🏁 <b>РАЗОМ ДО СПЛАТИ МЕНЕДЖЕРУ: {to_pay_manager} UAH</b>"
+        f"🏁 <b>РАЗОМ ДО СПЛАТИ: {to_pay_manager} UAH</b>"
     )
-
     await sending_report_to_manager(bot, chat_id, report)
+
+
+def get_order_details(data, cart_items):
+    only_products_sum = sum(float(item.final_price) for item in cart_items)
+    delivery_type = data.get("delivery_type")
+    delivery_price = float(data.get("delivery_price", 0))
+    final_amount = only_products_sum + delivery_price
+    history_content = "\n".join([f"• {item.product_name} x{item.quantity}" for item in cart_items])
+    
+    if delivery_type in ["pickup", "self_delivery"] or delivery_price == 0:
+        delivery_row = "🚀 <b>Самовивіз: БЕЗКОШТОВНО 🎉</b>"
+    else:
+        delivery_row = f"🚚 Доставка: <b>{delivery_price} UAH</b>"
+        
+    return {
+        "only_products_sum": only_products_sum,
+        "final_amount": final_amount,
+        "history_content": history_content,
+        "delivery_row": delivery_row,
+        "delivery_type": delivery_type
+    }
 
 
 async def ask_payment_method(message: Message, state: FSMContext):
@@ -110,7 +129,6 @@ async def process_delivery_start(message: Message, state: FSMContext):
         "Надішліть геолокацію для доставки:",
         reply_markup=delivery_keyboard()
     )
-
     await state.set_state(OrderProcess.sending_location)
 
 
@@ -149,82 +167,95 @@ async def process_location(message: Message, state: FSMContext):
     await ask_payment_method(message, state)
 
 
-@router.message(OrderProcess.choosing_payment)
+@router.message(F.text == "⬅️ Назад до вибору оплати")
+async def back_to_payment_choice(message: Message, state: FSMContext):
+    await message.answer(
+        "Оберіть спосіб оплати ще раз:",
+        reply_markup=cash_or_card_kb() 
+    )
+
+@router.message(
+    OrderProcess.choosing_payment,
+    F.text.in_(["💳 Оплата онлайн", "💵 Готівка"]))
 async def final_order_confirmation(message: Message, state: FSMContext):
     chat_id = message.from_user.id
     payment_method = message.text
     data = await state.get_data()
 
     cart = await db_get_user_cart(chat_id)
-    cart_items = await db_get_finally_cart_products(chat_id)
-
-    if not cart or not cart_items:
-        await message.answer("😱 Помилка: кошик порожній")
-        await state.clear()
+    if not cart:
+        await message.answer("⚠️ Сталася помилка з кошиком. Спробуйте ще раз")
         return
 
-    delivery_type = data.get("delivery_type") 
-    only_products_sum = sum(float(item.final_price) for item in cart_items)
-    delivery_price = float(data.get("delivery_price", 0))
-    final_amount = only_products_sum + delivery_price
+    cart_items = await db_get_finally_cart_products(chat_id)
+    if not cart_items:
+        await message.answer("⚠️ Кошик порожній")
+        return
 
-    if delivery_type in ["pickup", "self_delivery"] or delivery_price == 0:
-        if delivery_type in ["pickup", "self_delivery"]:
-            delivery_row = "🚀 <b>Самовивіз: БЕЗКОШТОВНО 🎉</b>"
-        else:
-            delivery_row = "🚚 Доставка: <b>БЕЗКОШТОВНО 🎉</b>"
-    else:
-        delivery_row = f"🚚 Доставка: <b>{delivery_price} UAH</b>"
+    res = get_order_details(data, cart_items)
 
     if payment_method == "💳 Оплата онлайн":
+
+        back_pay_kb = ReplyKeyboardMarkup(
+            keyboard=[[KeyboardButton(text="⬅️ Назад до вибору оплати")]],
+            resize_keyboard=True)
+
         test_payment_info = (
-            "⏳ **Генеруємо рахунок для оплати...**\n\n"
-            "🛠 **Інструкція для тестової оплати:**\n"
+            "⏳ Генеруємо рахунок для оплати...\n\n"
+            "🛠 <b>Інструкція для тестової оплати:</b>\n"
             "1. Натисніть кнопку 'Сплатити' двічі нижче\n"
             "2. Введіть номер: `4444333322221111`\n"
             "3. Термін дії: будь-яка дата в майбутньому (напр. 12/29)\n"
             "4. CVC: будь-які 3 цифри (напр. 123)\n\n"
             "💡 Це тестове середовище, реальні кошти не списуються"
         )
-
-        await message.answer(test_payment_info, parse_mode="Markdown", reply_markup=ReplyKeyboardRemove())
-        
-        await asyncio.sleep(1)
+        await message.answer(
+            test_payment_info,
+            parse_mode="HTML",
+            reply_markup=back_pay_kb
+        )
+        await asyncio.sleep(2)
 
         await message.bot.send_invoice(
-            chat_id=chat_id, 
-            title="Оплата замовлення", 
-            description="Смачненьке вже готується!",
-            payload=str(cart.id), 
-            provider_token=PAY, 
+            chat_id=chat_id,
+            title="Оплата замовлення",
+            description="Оплата замовлення в CafeSmile 🍰",
+            payload=str(cart.id),
+            provider_token=PAY,
             currency="UAH",
-            prices=[LabeledPrice(label="Замовлення", amount=int(final_amount * 100))],
+            prices=[
+                LabeledPrice(
+                    label="Замовлення",
+                    amount=int(res['final_amount'] * 100)
+                )
+            ],
             start_parameter="cafe_order"
         )
     else:
-        history_content = "\n".join([f"• {item.product_name} x{item.quantity}" for item in cart_items])
-        
         await db_save_order(
             user_id=chat_id,
-            content=history_content,
-            total=final_amount,
-            delivery=delivery_type if delivery_type else "Кур'єр"
+            content=res['history_content'],
+            total=res['final_amount'],
+            delivery=res['delivery_type']
         )
-
         await message.answer(
             f"✅ <b>Замовлення прийнято!</b>\n\n"
-            f"💰 Сума за товари: <b>{only_products_sum} UAH</b>\n"
-            f"{delivery_row}\n" 
+            f"💰 Сума за товари: <b>{res['only_products_sum']} UAH</b>\n"
+            f"{res['delivery_row']}\n"
             f"━━━━━━━━━━━━━━━━━━\n"
-            f"🏁 <b>ДО СПЛАТИ: {final_amount} UAH</b>\n\n"
+            f"🏁 <b>ДО СПЛАТИ: {res['final_amount']} UAH</b>\n\n"
             f"📞 Очікуйте на повідомлення менеджера для підтвердження",
             reply_markup=back_to_main_menu(),
             parse_mode="HTML",
         )
-        
         await send_order_report_to_manager(
-            message.bot, chat_id, data, cart_items, "💵 Готівка", 
-            only_products_sum, final_amount
+            message.bot,
+            chat_id,
+            data,
+            cart_items,
+            "💵 Готівка",
+            res['only_products_sum'],
+            res['final_amount']
         )
         await db_clear_cart(cart.id)
         await state.clear()
@@ -239,45 +270,46 @@ async def pre_checkout_handler(pre_checkout_q: PreCheckoutQuery):
 async def success_payment_handler(message: Message, state: FSMContext):
     data = await state.get_data()
     chat_id = message.chat.id
-    cart_items = await db_get_finally_cart_products(chat_id)
+
     cart = await db_get_user_cart(chat_id)
+    if not cart:
+        await message.answer("⚠️ Помилка з кошиком після оплати. Зверніться до менеджера")
+        return
 
-    only_products_sum = sum(float(item.final_price) for item in cart_items)
-    delivery_price = float(data.get("delivery_price", 0))
-    final_amount = only_products_sum + delivery_price
-    delivery_type = data.get("delivery_type")
+    cart_items = await db_get_finally_cart_products(chat_id)
+    if not cart_items:
+        await message.answer("⚠️ Товари не знайдені. Зверніться до менеджера")
+        return
 
-    if delivery_type in ["pickup", "self_delivery"] or delivery_price == 0:
-        delivery_row = "🚀 Самовивіз: <b>БЕЗКОШТОВНО 🎉</b>"
-    else:
-        delivery_row = f"🚚 Доставка: <b>{delivery_price} UAH</b>"
-
-    history_content = "\n".join([f"• {item.product_name} x{item.quantity}" for item in cart_items])
+    res = get_order_details(data, cart_items)
 
     await db_save_order(
         user_id=chat_id,
-        content=history_content,
-        total=final_amount,
-        delivery=delivery_type if delivery_type else "Кур'єр"
+        content=res['history_content'],
+        total=res['final_amount'],
+        delivery=f"{res['delivery_type']} (ОПЛАЧЕНО ✅)"
     )
-
     await send_order_report_to_manager(
-        message.bot, chat_id, data, cart_items, "💳 ОПЛАЧЕНО ОНЛАЙН ✅", 
-        only_products_sum, final_amount
+        message.bot,
+        chat_id,
+        data,
+        cart_items,
+        "💳 Сплачено онлайн ✅",
+        res['only_products_sum'],
+        0
     )
-
     await message.answer(
         f"💫 <b>Оплата успішна!</b>\n"
-        f"Кухня вже готує смачненьке 😉\n\n"
-        f"💰 Товари: <b>{only_products_sum} UAH</b>\n"
-        f"{delivery_row}\n"
+        f"✅ <b>Замовлення прийнято!</b>\n\n"
+        f"💰 Сума за товари: <b>{res['only_products_sum']} UAH</b>\n"
+        f"{res['delivery_row']}\n"
         f"━━━━━━━━━━━━━━━━━━\n"
-        f"🏁 <b>ДО СПЛАТИ: 0 UAH (СПЛАЧЕНО ✅)</b>\n\n"
+        f"🏁 <b>ДО СПЛАТИ: (СПЛАЧЕНО ✅)</b>\n\n"
         f"📞 Очікуйте на повідомлення менеджера!",
         reply_markup=back_to_main_menu(),
         parse_mode="HTML"
     )
-    
-    if cart:
-        await db_clear_cart(cart.id)
+    await db_clear_cart(cart.id)
     await state.clear()
+
+
