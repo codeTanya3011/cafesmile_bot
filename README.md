@@ -7,6 +7,54 @@ An interactive Telegram bot for café order automation, featuring integrated pay
 
 ---
 
+## 📸 Preview
+
+### Welcome & Categories
+
+<p align="center">
+  <img src="images/welcome_message.png" width="250"/>
+  &nbsp;&nbsp;
+  <img src="images/categories.png" width="250"/>
+</p>
+
+<p align="center">
+  <img src="images/category_details.png" width="250"/>
+  &nbsp;&nbsp;
+  <img src="images/product.png" width="250"/>
+</p>
+
+### Cart & Information
+
+<p align="center">
+  <img src="images/cart.png" width="250"/>
+  &nbsp;&nbsp;
+  <img src="images/info_message.png" width="250"/>
+</p>
+
+### Ordering Process (FSM)
+
+<p align="center">
+  <img src="images/fsm.png" width="250"/>
+  &nbsp;&nbsp;
+  <img src="images/fsm2.png" width="250"/>
+</p>
+
+### Order Completion
+
+<p align="center">
+  <img src="images/order_success.png" width="250"/>
+  &nbsp;&nbsp;
+  <img src="images/orders_history.png" width="250"/>
+</p>
+
+### Manager Notifications
+
+<p align="center">
+  <img src="images/manager_order_message.png" width="250"/>
+</p>
+
+---
+
 ## 🛠 About The Project
 This bot is a comprehensive **MVP (Minimum Viable Product)** for an order automation system. It guides the client from browsing the menu to the final payment and transfers order details directly to the kitchen.
 
