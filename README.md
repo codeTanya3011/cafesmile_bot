@@ -4,6 +4,7 @@ An interactive Telegram bot for café order automation, featuring integrated pay
 
 ## 🔗 Try it on Telegram
 **[@cafesmile68_bot](https://t.me/cafesmile68_bot)**
+**Production Deployment:** Deployed and actively maintained since February 2026.
 
 ---
 
@@ -57,6 +58,13 @@ An interactive Telegram bot for café order automation, featuring integrated pay
 
 ## 🛠 About The Project
 This bot is a comprehensive **MVP (Minimum Viable Product)** for an order automation system. It guides the client from browsing the menu to the final payment and transfers order details directly to the kitchen.
+
+## 📊 Performance & Production Metrics
+
+- **FSM Workflow:** 3 states covering delivery method, location input, and payment selection.
+- **Production Orders:** 6 orders recorded in the production database since February 2026.
+- **Database:** PostgreSQL with asynchronous SQLAlchemy integration.
+- **Payment Flow:** Supports online and cash payment methods with payment confirmation handling.
 
 ### Key Features for Users:
 * **Interactive Menu**: User-friendly navigation through dish categories with photos and descriptions.
